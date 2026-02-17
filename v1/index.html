@@ -1,0 +1,1961 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>StoryForge Atlas — Next-Gen Storytelling Frameworks (Offline-First)</title>
+  <meta name="description" content="A long-form, offline-first research-fused guide to help next-gen innovators build their own storytelling frameworks—templates, examples, prompts, and a local-only gamified lab." />
+
+  <!--
+    ZERO-HARM & ANTI-INVERSION NOTE (visible in footer too)
+    - No telemetry. No auto-send. Local-only storage.
+    - Tools here are for benevolent storytelling, critical thinking, and stewardship.
+    - Avoid coercion, doxxing, manipulation, hate, or harm. Build narratives that increase consent and agency.
+  -->
+
+  <style>
+    /* =========================================================================
+       TOOLTIP: CSS TOKENS & LAYOUT SYSTEM
+       What this is: A tiny design system (colors, spacing, type) + layout utilities.
+       How to extend: Add new CSS variables under :root; create new section classes with existing tokens.
+       Expected outcome: Consistent visuals across a long-form educational page, printable, accessible.
+    ========================================================================= */
+    :root{
+      --bg0:#06070b;
+      --bg1:#0b1020;
+      --bg2:#101a33;
+      --fg0:#e8eefc;
+      --fg1:#b9c7ef;
+      --mut:#8aa0d8;
+      --ok:#7ef0b2;
+      --warn:#ffd57a;
+      --bad:#ff7a7a;
+      --acc:#8db5ff;
+      --acc2:#c6a7ff;
+      --ink: rgba(255,255,255,.08);
+      --ink2: rgba(255,255,255,.14);
+      --shadow: 0 16px 60px rgba(0,0,0,.45);
+      --r: 18px;
+      --r2: 26px;
+      --max: 1180px;
+      --pad: clamp(14px, 2.2vw, 22px);
+      --pad2: clamp(18px, 3.2vw, 34px);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--fg0);
+      background: radial-gradient(1200px 900px at 20% 10%, rgba(141,181,255,.16), transparent 55%),
+                  radial-gradient(900px 700px at 80% 15%, rgba(198,167,255,.14), transparent 55%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1) 40%, var(--bg2));
+      overflow-x:hidden;
+    }
+
+    a{color:var(--acc); text-decoration:none}
+    a:hover{text-decoration:underline}
+    code, pre{font-family:var(--mono)}
+    pre{
+      background: rgba(0,0,0,.28);
+      border:1px solid var(--ink2);
+      border-radius: 14px;
+      padding: 14px;
+      overflow:auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    /* =========================================================================
+       TOOLTIP: SPLASH / LOADING OVERLAY
+       What this is: Animated “boot screen” for a satisfying, game-like start.
+       How to extend: Change slogans, add steps, or tie the progress to real tasks.
+       Expected outcome: Smooth first impression while app initializes IndexedDB + service worker.
+    ========================================================================= */
+    #splash{
+      position:fixed; inset:0;
+      display:grid; place-items:center;
+      background: radial-gradient(900px 600px at 20% 10%, rgba(141,181,255,.20), transparent 60%),
+                  radial-gradient(700px 520px at 80% 25%, rgba(198,167,255,.16), transparent 60%),
+                  linear-gradient(180deg, #05060a, #090d1a);
+      z-index:9999;
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    #splash.hidden{opacity:0; pointer-events:none; transform: translateY(-8px)}
+    .splashCard{
+      width:min(820px, calc(100% - 40px));
+      padding: clamp(16px, 3vw, 28px);
+      border-radius: var(--r2);
+      border:1px solid var(--ink2);
+      background: rgba(0,0,0,.30);
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .splashCard::before{
+      content:"";
+      position:absolute; inset:-60px;
+      background: conic-gradient(from 200deg, rgba(141,181,255,.22), rgba(198,167,255,.18), rgba(126,240,178,.12), rgba(141,181,255,.22));
+      filter: blur(26px);
+      opacity:.55;
+      animation: swirl 4.6s linear infinite;
+    }
+    @keyframes swirl{to{transform:rotate(360deg)}}
+    .splashInner{position:relative}
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      margin-bottom: 10px;
+    }
+    .logo{
+      width:40px; height:40px; border-radius:14px;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.22), transparent 55%),
+                  linear-gradient(135deg, rgba(141,181,255,.65), rgba(198,167,255,.55));
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      border:1px solid rgba(255,255,255,.18);
+      position:relative;
+    }
+    .logo:after{
+      content:"✶";
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      color: rgba(255,255,255,.9);
+      font-weight:700;
+      text-shadow: 0 10px 24px rgba(0,0,0,.4);
+    }
+    .brand h1{font-size: clamp(18px, 3vw, 26px); margin:0}
+    .brand p{margin:0; color:var(--fg1)}
+    .progressWrap{margin-top:14px}
+    .bar{
+      height:12px; border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+    }
+    .bar > i{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg, rgba(141,181,255,.85), rgba(198,167,255,.85), rgba(126,240,178,.75));
+      border-radius:999px;
+      transition: width .35s ease;
+    }
+    .bootLines{
+      margin-top: 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(255,255,255,.78);
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+
+    /* =========================================================================
+       TOOLTIP: PARALLAX BACKDROP + CONSTELLATION
+       What this is: A layered background + a small “state constellation” visualizer.
+       How to extend: Add more layers, change star density, map nodes to your own data.
+       Expected outcome: A “living dashboard” vibe without external assets.
+    ========================================================================= */
+    .sky{
+      position:fixed; inset:0; z-index:-2;
+      pointer-events:none;
+      overflow:hidden;
+    }
+    .layer{
+      position:absolute; inset:-10%;
+      background-repeat:no-repeat;
+      opacity:.65;
+      transform: translate3d(0,0,0);
+      will-change: transform;
+    }
+    .layer.nebula{
+      background:
+        radial-gradient(700px 520px at 20% 20%, rgba(141,181,255,.20), transparent 60%),
+        radial-gradient(650px 520px at 75% 15%, rgba(198,167,255,.16), transparent 62%),
+        radial-gradient(560px 420px at 65% 70%, rgba(126,240,178,.10), transparent 60%);
+      filter: blur(1px);
+    }
+    .layer.stars{
+      opacity:.5;
+      background-image:
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,.35), transparent 60%),
+        radial-gradient(1.5px 1.5px at 80% 35%, rgba(255,255,255,.25), transparent 60%),
+        radial-gradient(1.8px 1.8px at 35% 75%, rgba(255,255,255,.30), transparent 60%),
+        radial-gradient(1.2px 1.2px at 60% 55%, rgba(255,255,255,.22), transparent 60%),
+        radial-gradient(1.6px 1.6px at 92% 78%, rgba(255,255,255,.26), transparent 60%),
+        radial-gradient(1.2px 1.2px at 15% 88%, rgba(255,255,255,.22), transparent 60%);
+    }
+    canvas#constellation{
+      position:fixed; right:14px; bottom:14px;
+      width: 190px; height: 190px;
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      box-shadow: var(--shadow);
+      z-index: 10;
+      pointer-events:none;
+    }
+
+    /* =========================================================================
+       TOOLTIP: STICKY NAV + SEARCH
+       What this is: A compact table-of-contents for a long-form page + search filter.
+       How to extend: Add new anchors and call addNavItem() in JS to keep things in sync.
+       Expected outcome: Users can roam the doc like a “knowledge map” rather than scrolling forever.
+    ========================================================================= */
+    header{
+      position:sticky; top:0; z-index:50;
+      background: linear-gradient(180deg, rgba(6,7,11,.92), rgba(6,7,11,.66));
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 10px var(--pad);
+      display:flex; align-items:center; gap:10px;
+    }
+    .topbar .title{
+      display:flex; align-items:center; gap:10px;
+      min-width: 230px;
+    }
+    .topbar .title strong{font-size:14px}
+    .pill{
+      font-size:12px;
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.86);
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .pill b{color:var(--ok)}
+    .spacer{flex:1}
+    .search{
+      display:flex; align-items:center; gap:10px;
+      flex: 1 1 520px;
+      max-width: 720px;
+    }
+    .search input{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--fg0);
+      outline:none;
+    }
+    .btn{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--fg0);
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn:hover{background: rgba(255,255,255,.12)}
+    .btn:active{transform: translateY(1px)}
+    .btnRow{display:flex; gap:8px; flex-wrap:wrap}
+
+    nav.toc{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 var(--pad) 10px;
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    nav.toc a{
+      font-size:12px;
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.88);
+    }
+    nav.toc a:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    /* =========================================================================
+       TOOLTIP: CONTENT SECTIONS + COLLAPSIBLES
+       What this is: Long-form “chapters” with <details> for expandable depth.
+       How to extend: Duplicate a section; use <details class="card"> blocks for modular content.
+       Expected outcome: Dense material stays readable; users choose their depth.
+    ========================================================================= */
+    main{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: var(--pad2) var(--pad) 120px;
+    }
+    .hero{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items:stretch;
+      margin-top: 10px;
+    }
+    @media (max-width: 980px){
+      .hero{grid-template-columns:1fr}
+      canvas#constellation{display:none}
+      .topbar .title{min-width:auto}
+    }
+
+    .card{
+      border-radius: var(--r2);
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.20);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .pad{padding: var(--pad2)}
+    .kicker{color:var(--mut); font-size: 13px; letter-spacing:.2px}
+    h2{margin: 10px 0 6px; font-size: clamp(18px, 2.7vw, 28px)}
+    h3{margin: 18px 0 8px; font-size: clamp(16px, 2.2vw, 22px)}
+    p{color: rgba(255,255,255,.88); line-height:1.55}
+    ul{color: rgba(255,255,255,.88); line-height:1.55}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+    @media (max-width: 860px){ .grid2{grid-template-columns:1fr} }
+    .tagRow{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+    .tag{
+      font-size:12px;
+      padding: 6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(141,181,255,.08);
+      color: rgba(255,255,255,.88);
+    }
+    .tag.alt{background: rgba(198,167,255,.08)}
+    .tag.ok{background: rgba(126,240,178,.08)}
+    .tag.warn{background: rgba(255,213,122,.08)}
+
+    details.card{
+      margin-top: 14px;
+    }
+    details.card > summary{
+      list-style:none;
+      cursor:pointer;
+      padding: 14px 16px;
+      font-weight: 700;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      display:flex; align-items:center; gap:10px;
+    }
+    details.card > summary::-webkit-details-marker{display:none}
+    details.card[open] > summary{background: rgba(255,255,255,.06)}
+    .summaryHint{
+      margin-left:auto;
+      font-weight:600;
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      display:flex; gap:8px; align-items:center;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: rgba(255,255,255,.22);
+      border:1px solid rgba(255,255,255,.16);
+    }
+
+    .callout{
+      padding: 12px 14px;
+      border-radius: 16px;
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+    }
+    .callout strong{color: var(--ok)}
+    .warnbox strong{color: var(--warn)}
+    .badbox strong{color: var(--bad)}
+
+    /* =========================================================================
+       TOOLTIP: LAB FORMS
+       What this is: Local-only “framework builder” + notes + saved examples.
+       How to extend: Add new fields; store them into IndexedDB via db.put().
+       Expected outcome: A living workbook users can build on offline.
+    ========================================================================= */
+    .lab label{display:block; font-size:12px; color: rgba(255,255,255,.76); margin: 10px 0 6px}
+    .lab input, .lab textarea, .lab select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: var(--fg0);
+      outline:none;
+    }
+    .lab textarea{min-height: 110px; resize: vertical}
+    .twoCol{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 860px){ .twoCol{grid-template-columns:1fr} }
+    .mini{font-size:12px; color: rgba(255,255,255,.75)}
+    .hr{height:1px; background: rgba(255,255,255,.10); margin: 14px 0}
+    .list{
+      display:grid; gap:10px;
+      margin-top:10px;
+    }
+    .item{
+      padding: 12px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .item header{position:static; background:transparent; border:0}
+    .itemTitle{
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+      margin-bottom: 8px;
+    }
+    .itemTitle b{font-size: 14px}
+    .itemMeta{font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,.65)}
+    .itemActions{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px}
+
+    /* =========================================================================
+       TOOLTIP: GAMIFICATION HUD
+       What this is: A lightweight local-only XP/level/streak tracker.
+       How to extend: Add achievements, daily quests, and badges tied to saved frameworks.
+       Expected outcome: Makes learning “sticky” without manipulation or surveillance.
+    ========================================================================= */
+    #hud{
+      position:fixed; left:14px; bottom:14px;
+      width: min(420px, calc(100% - 28px));
+      border-radius: 22px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      box-shadow: var(--shadow);
+      padding: 12px 12px;
+      z-index: 11;
+      backdrop-filter: blur(10px);
+    }
+    #hud .row{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    #hud .row + .row{margin-top: 8px}
+    .stat{
+      padding: 8px 10px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      font-size:12px;
+      color: rgba(255,255,255,.86);
+      display:flex; gap:8px; align-items:center;
+    }
+    .stat i{font-style:normal; color: var(--ok); font-weight:800}
+    .hudBar{
+      flex:1;
+      height: 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);
+      overflow:hidden;
+      min-width: 160px;
+    }
+    .hudBar > span{
+      display:block; height:100%; width:0%;
+      background: linear-gradient(90deg, rgba(126,240,178,.70), rgba(141,181,255,.78), rgba(198,167,255,.78));
+      transition: width .35s ease;
+    }
+    .hudBtns{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap}
+    .tinyBtn{
+      padding: 8px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      color: var(--fg0);
+      cursor:pointer;
+      font-size:12px;
+    }
+    .tinyBtn:hover{background: rgba(255,255,255,.12)}
+
+    /* =========================================================================
+       TOOLTIP: PRINT STYLES
+       What this is: A print-friendly view for sharing in classrooms or policy rooms.
+       How to extend: Hide more UI, widen text, add page-break rules for sections.
+       Expected outcome: Clean printable handouts without the sci-fi background.
+    ========================================================================= */
+    @media print{
+      header, #hud, #constellation, .sky, #splash{display:none !important}
+      body{background:#fff; color:#000}
+      a{color:#000; text-decoration:underline}
+      .card{box-shadow:none; border:1px solid #ccc; background:#fff}
+      p, ul{color:#000}
+    }
+
+    footer{
+      margin-top: 28px;
+      color: rgba(255,255,255,.76);
+      font-size: 12px;
+    }
+    .footGrid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    @media (max-width: 860px){ .footGrid{grid-template-columns:1fr} }
+  </style>
+</head>
+
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="layer nebula" id="nebula"></div>
+    <div class="layer stars" id="stars"></div>
+  </div>
+
+  <canvas id="constellation" width="190" height="190" aria-hidden="true"></canvas>
+
+  <div id="splash" role="status" aria-live="polite">
+    <div class="splashCard">
+      <div class="splashInner">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>StoryForge Atlas</h1>
+            <p>Research-fused storytelling frameworks • offline-first • local-only</p>
+          </div>
+        </div>
+        <div class="progressWrap">
+          <div class="bar" aria-label="Loading progress"><i id="splashBar"></i></div>
+          <div class="bootLines" id="bootLines">boot: preparing…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="topbar">
+      <div class="title">
+        <div class="logo" style="width:30px;height:30px;border-radius:12px" aria-hidden="true"></div>
+        <div>
+          <strong>StoryForge Atlas</strong><div class="mini">Build your own storytelling framework 🧠✨</div>
+        </div>
+      </div>
+      <div class="pill" title="Local-only, offline-capable">
+        🛡️ <span>Local-only</span> <b>Zero-telemetry</b>
+      </div>
+      <div class="spacer"></div>
+      <div class="search">
+        <input id="searchBox" type="search" placeholder="Search the Atlas (e.g., “myth”, “climate”, “AI co-creation”, “identity”)…" autocomplete="off" />
+        <button class="btn" id="btnExpand">Expand</button>
+        <button class="btn" id="btnCollapse">Collapse</button>
+      </div>
+    </div>
+    <nav class="toc" id="toc"></nav>
+  </header>
+
+  <main>
+    <section class="hero" id="top">
+      <div class="card">
+        <div class="pad">
+          <div class="kicker">A practical synthesis across learning science, narrative psychology, HCI, and ethical AI 🧭</div>
+          <h2>Fuse research → invent your own storytelling framework</h2>
+          <p>
+            This is a long-form lab that helps next-gen creators, organizers, and builders design storytelling systems
+            that actually <em>work</em>: they engage attention, support learning, respect agency, and stay resilient against
+            manipulation. Everything here runs offline and stores only on your device.
+          </p>
+          <div class="grid2">
+            <div class="callout">
+              <strong>Core idea:</strong> a framework is not “a story.” It’s a repeatable method for turning
+              messy reality into meaning without lying to people. Think: a reusable forge, not a single sword.
+            </div>
+            <div class="callout warnbox">
+              <strong>Safety rails:</strong> We avoid persuasion-by-stealth and other “mind-hack” vibes. You’ll see
+              explicit consent cues, transparency prompts, and anti-coercion checks baked into templates.
+            </div>
+          </div>
+
+          <div class="tagRow" aria-label="Topics">
+            <span class="tag ok">Narrative transportation</span>
+            <span class="tag alt">Digital storytelling</span>
+            <span class="tag">Identity & meaning</span>
+            <span class="tag warn">Ethics & misuse resistance</span>
+            <span class="tag ok">Co-creation & play</span>
+          </div>
+
+          <div class="hr"></div>
+
+          <details class="card" open>
+            <summary>
+              🧠 The “Research Spine” (what studies tend to agree on)
+              <span class="summaryHint"><span class="dot"></span> open</span>
+            </summary>
+            <div class="pad">
+              <div class="grid2">
+                <div class="callout">
+                  <strong>1) Stories can “transport” attention.</strong><br/>
+                  A well-built narrative can pull people into a mental simulation: characters, stakes, causal chains.
+                  This is linked to shifts in beliefs/attitudes and sustained effects after the story ends (the
+                  “echo” effect). See the systematic review on narrative transportation for a map of outcomes and moderators.
+                  <div class="mini">Source: Thomas et al., 2024 (systematic review). <a href="https://digitalcommons.odu.edu/cgi/viewcontent.cgi?article=1026&context=marketing_pubs" target="_blank" rel="noopener">ODU PDF</a></div>
+                </div>
+                <div class="callout">
+                  <strong>2) Digital storytelling often boosts learning regulation.</strong><br/>
+                  A 2025 review links digital storytelling to improvements across cognitive/metacognitive regulation,
+                  motivation, emotion, and behavior—basically, it helps learners steer their own learning process.
+                  <div class="mini">Source: Gita, 2025 (review). <a href="https://www.sciencedirect.com/science/article/pii/S2666557325000266" target="_blank" rel="noopener">ScienceDirect</a></div>
+                </div>
+                <div class="callout">
+                  <strong>3) Co-creation makes writing feel like play.</strong><br/>
+                  A 2025 ACM paper presents a co-creative story-crafting game that turns writing into a rewarding loop.
+                  Treat this as design evidence: “fun + structure” can increase output without crushing voice.
+                  <div class="mini">Source: Fu et al., 2025. <a href="https://dl.acm.org/doi/full/10.1145/3706599.3721163" target="_blank" rel="noopener">ACM</a></div>
+                </div>
+                <div class="callout">
+                  <strong>4) Writers using AI are value-driven when it’s done well.</strong><br/>
+                  Interviews with creative writers show intentional choices about when/how to use AI, guided by values
+                  like authenticity and craftsmanship—useful for setting “AI rules” inside a framework.
+                  <div class="mini">Source: arXiv, 2025. <a href="https://arxiv.org/html/2411.03137v2" target="_blank" rel="noopener">arXiv</a></div>
+                </div>
+              </div>
+
+              <div class="hr"></div>
+              <div class="callout">
+                <strong>Climate / civic storytelling angle:</strong> research in 2025 tested narrative transportation
+                in climate change education and examined links to self-efficacy and interest—useful if your framework
+                is aimed at stewardship outcomes rather than pure entertainment.
+                <div class="mini">Source: Paymard, 2025. <a href="https://jae-online.org/index.php/jae/article/view/3244" target="_blank" rel="noopener">JAE article page</a></div>
+              </div>
+
+              <div class="hr"></div>
+              <p class="mini">
+                Note: No single study “proves storytelling solves everything.” We treat this as a working synthesis:
+                enough evidence to design responsibly, and enough uncertainty to stay humble and iterative.
+              </p>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="pad">
+          <div class="kicker">Your local-only lab status</div>
+          <h3 style="margin-top:10px">Build Log</h3>
+          <div class="callout">
+            <div class="mini">Saved frameworks: <b id="statFrameworks">0</b> • Notes: <b id="statNotes">0</b> • Last save: <b id="statLast">—</b></div>
+            <div class="mini">Mode: <b id="statMode">Offline-capable</b> • Storage: <b id="statStorage">IndexedDB</b></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <details class="card">
+            <summary>🧪 Quickstart: “Framework in 10 minutes” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+            <div class="pad">
+              <ol style="margin:0; padding-left: 18px; color: rgba(255,255,255,.88); line-height:1.55">
+                <li><b>Pick a purpose</b>: educate, heal, mobilize, entertain, or bridge conflicts.</li>
+                <li><b>Pick a lens</b>: myth, documentary, game, debate, or “data-to-drama.”</li>
+                <li><b>Choose one mechanic</b>: quests, branching choices, recurring symbols, or character POV shifts.</li>
+                <li><b>Add the safety clause</b>: transparency + consent + no coercion + no targeting individuals.</li>
+                <li><b>Test a tiny episode</b> with 1–3 people; measure clarity, agency, and learning.</li>
+              </ol>
+              <div class="hr"></div>
+              <button class="btn" id="btnAwardQuickstart">+ Award XP for Quickstart</button>
+              <p class="mini">This does not send anything anywhere. It just makes your HUD happy. 😊</p>
+            </div>
+          </details>
+
+          <details class="card">
+            <summary>📌 Research links used in this Atlas <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+            <div class="pad">
+              <ul style="margin:0; padding-left: 18px">
+                <li>Thomas et al. (2024) narrative transportation systematic review: <a href="https://digitalcommons.odu.edu/cgi/viewcontent.cgi?article=1026&context=marketing_pubs" target="_blank" rel="noopener">ODU PDF</a></li>
+                <li>Gita (2025) digital storytelling + self-regulation review: <a href="https://www.sciencedirect.com/science/article/pii/S2666557325000266" target="_blank" rel="noopener">ScienceDirect</a></li>
+                <li>Fu et al. (2025) co-creative story-crafting game: <a href="https://dl.acm.org/doi/full/10.1145/3706599.3721163" target="_blank" rel="noopener">ACM</a></li>
+                <li>How writers integrate AI (2025): <a href="https://arxiv.org/html/2411.03137v2" target="_blank" rel="noopener">arXiv</a></li>
+                <li>Cheung &amp; Shi (2024) co-creating stories with GenAI (language learning focus): <a href="https://www.jbe-platform.com/content/journals/10.1075/aral.24101.che?crawler=true&mimetype=application%2Fpdf" target="_blank" rel="noopener">PDF</a></li>
+                <li>Paymard (2025) storytelling + narrative transportation in climate education: <a href="https://jae-online.org/index.php/jae/article/view/3244" target="_blank" rel="noopener">JAE</a></li>
+                <li>Macapugay (2024) SENSEI pedagogy (narrative/storytelling empowerment): <a href="https://www.mdpi.com/2313-5778/8/3/94" target="_blank" rel="noopener">MDPI</a></li>
+              </ul>
+              <p class="mini">These are for reading; the Atlas itself works offline without them.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </section>
+
+    <section id="principles" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Foundations</div>
+        <h2>Principles for a modern storytelling framework</h2>
+        <div class="grid2">
+          <div class="callout">
+            <strong>Agency-first design 🧷</strong><br/>
+            Your audience is not a target. They’re a collaborator. Make “choice points” explicit:
+            what to believe, what to feel, what to do next—always optional.
+          </div>
+          <div class="callout">
+            <strong>Truth-friendly imagination 🔎</strong><br/>
+            Use fiction to explore possibilities, not to smuggle false claims.
+            Label speculative elements. Separate “known,” “unknown,” and “proposed.”
+          </div>
+          <div class="callout">
+            <strong>Transport with guardrails 🚧</strong><br/>
+            Narrative transportation is powerful. That’s why we add checks:
+            “Could this be used to manipulate?” “Does it reduce someone’s autonomy?”
+            “Does it call for harm?” If yes: redesign.
+          </div>
+          <div class="callout">
+            <strong>Make it iterative 🧪</strong><br/>
+            Treat frameworks like software: version, test, patch. Measure outcomes:
+            clarity, retention, emotional safety, and constructive action.
+          </div>
+        </div>
+
+        <details class="card">
+          <summary>🧩 The 7-part Framework Skeleton <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <ol style="margin:0; padding-left: 18px; color: rgba(255,255,255,.88); line-height:1.55">
+              <li><b>Purpose</b> (why this story exists)</li>
+              <li><b>Audience contract</b> (what you promise: truthfulness, consent, tone)</li>
+              <li><b>World rules</b> (what causes what; how consequences work)</li>
+              <li><b>Perspective engine</b> (POV, character lenses, multi-voice)</li>
+              <li><b>Mechanics</b> (quests, chapters, branching, rituals, artifacts)</li>
+              <li><b>Feedback</b> (reflection prompts, community remix, learning checks)</li>
+              <li><b>Safety &amp; ethics</b> (anti-coercion, no targeting, transparency, repair pathways)</li>
+            </ol>
+            <div class="hr"></div>
+            <div class="callout">
+              <strong>Why this works:</strong> It pairs cognitive engagement (simulation + causality) with
+              self-regulation (reflection + choices). Reviews of digital storytelling connect it to multiple
+              learning regulation domains, which is basically “learning how to learn.”<br/>
+              <span class="mini">See: Gita, 2025. <a href="https://www.sciencedirect.com/science/article/pii/S2666557325000266" target="_blank" rel="noopener">ScienceDirect</a></span>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="frameworks" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Multiple examples (copy + mutate)</div>
+        <h2>8 example frameworks you can expand</h2>
+        <p>
+          Each framework below includes: (1) a concept, (2) a structure, (3) a “mechanic,” and (4) a safety clause.
+          Steal the shape, not the exact words. Make your own myth-engine. 🛠️✨
+        </p>
+
+        <details class="card" open>
+          <summary>1) The Mythic Systems Lens (MSL) — “turn complexity into myth without lying” <span class="summaryHint"><span class="dot"></span> open</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> you’re explaining complex systems (climate, governance, health, technology) to a wide audience.</p>
+                <p><b>Structure:</b> “Realm → Forces → Guardians → Temptations → Trials → Repair.”</p>
+                <p><b>Mechanic:</b> Each chapter ends with a “Reality Anchor” (a short, verifiable fact) and a “Speculation Gate” (clearly labeled hypothesis).</p>
+                <div class="callout">
+                  <strong>Safety clause:</strong> Never portray real individuals as villains. Use archetypes (systems, incentives, patterns), not targets.
+                </div>
+              </div>
+              <div>
+                <p><b>Example seed:</b> “The City of Mirrors” — a realm where every policy creates reflections (second-order effects).</p>
+                <ul>
+                  <li>Forces: incentives, scarcity, attention</li>
+                  <li>Guardians: auditors, librarians, gardeners</li>
+                  <li>Temptations: shortcuts, scapegoats, secrecy</li>
+                  <li>Trial: a crisis that exposes hidden dependencies</li>
+                  <li>Repair: transparency rituals + shared tools</li>
+                </ul>
+                <div class="mini">
+                  Research tie-in: narrative transportation can sustain effects beyond the story, so anchoring truth matters. <a href="https://digitalcommons.odu.edu/cgi/viewcontent.cgi?article=1026&context=marketing_pubs" target="_blank" rel="noopener">Thomas et al., 2024</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>2) The Data-to-Drama Pipeline (D2D) — “facts become felt” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> you have real data and want comprehension without boredom.</p>
+                <p><b>Structure:</b> Dataset → Constraint → Character → Choice → Consequence → Reflection.</p>
+                <p><b>Mechanic:</b> Readers pick a policy lever (e.g., “fund prevention” vs “fund response”) and see second-order outcomes.</p>
+                <div class="callout warnbox">
+                  <strong>Transparency rule:</strong> Link every dramatic beat to the underlying assumption. If an assumption is weak, label it.
+                </div>
+              </div>
+              <div>
+                <p><b>Example seed:</b> “Three budgets walk into a wildfire season.”</p>
+                <ul>
+                  <li>Character A: the prevention planner</li>
+                  <li>Character B: the emergency responder</li>
+                  <li>Character C: the community steward</li>
+                </ul>
+                <p class="mini">
+                  Climate education studies are increasingly testing narrative mechanisms like transportation and self-efficacy—perfect fit for D2D. <a href="https://jae-online.org/index.php/jae/article/view/3244" target="_blank" rel="noopener">Paymard, 2025</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>3) The Co-Creative Writer’s Pact (CCWP) — “AI as apprentice, not author” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> you’re using generative AI tools and want to protect voice + authenticity.</p>
+                <p><b>Structure:</b> Values → Boundaries → Prompts → Review → Rewrite → Attribution.</p>
+                <p><b>Mechanic:</b> “3-pass crafting”: AI proposes options → human selects intent → human rewrites in own voice.</p>
+                <div class="callout">
+                  <strong>Value alignment:</strong> Writers report intentional AI use guided by authenticity and craftsmanship—so bake values into your process. <span class="mini"><a href="https://arxiv.org/html/2411.03137v2" target="_blank" rel="noopener">arXiv, 2025</a></span>
+                </div>
+              </div>
+              <div>
+                <p><b>Example pact:</b></p>
+                <ul>
+                  <li>AI may generate <b>outlines</b>, alternate metaphors, counterarguments.</li>
+                  <li>AI may not generate “final personal testimony” without heavy human rewrite.</li>
+                  <li>All sensitive details are fictionalized or removed.</li>
+                  <li>Sources are cited; speculation is labeled.</li>
+                </ul>
+                <div class="mini">
+                  GenAI storytelling in language learning contexts stresses critical use and awareness. <a href="https://www.jbe-platform.com/content/journals/10.1075/aral.24101.che?crawler=true&mimetype=application%2Fpdf" target="_blank" rel="noopener">Cheung &amp; Shi, 2024</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>4) The Quest-Loop Curriculum (QLC) — “learn by doing, but make it narratively sticky” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> teaching skills (writing, civic tools, research literacy, teamwork).</p>
+                <p><b>Structure:</b> Quest → Attempt → Feedback → Reflection → Upgrade → Share.</p>
+                <p><b>Mechanic:</b> “Artifact crafting” (a short story, a policy brief, a comic, a micro-game) per quest.</p>
+                <div class="callout">
+                  <strong>Design evidence:</strong> Co-creative story games can make writing feel rewarding and playful. <span class="mini"><a href="https://dl.acm.org/doi/full/10.1145/3706599.3721163" target="_blank" rel="noopener">Fu et al., 2025</a></span>
+                </div>
+              </div>
+              <div>
+                <p><b>Example quests:</b></p>
+                <ul>
+                  <li>Write a 200-word “future letter” that includes 2 verifiable facts.</li>
+                  <li>Rewrite it from a different stakeholder POV.</li>
+                  <li>Add a “repair path” (what to do if the story causes harm or misunderstanding).</li>
+                </ul>
+                <p class="mini">
+                  Digital storytelling is associated with multiple self-regulation domains—QLC exploits that by making reflection a required mechanic. <a href="https://www.sciencedirect.com/science/article/pii/S2666557325000266" target="_blank" rel="noopener">Gita, 2025</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>5) The Multi-Voice Bridge (MVB) — “conflict de-escalation via perspective swapping” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <p><b>Use when:</b> groups disagree and you want shared reality without forcing consensus.</p>
+            <div class="grid2">
+              <div class="callout">
+                <strong>Structure:</strong> Common ground → Divergent values → Shared constraints → Options → Trade-offs → Joint commitments.
+              </div>
+              <div class="callout warnbox">
+                <strong>Anti-coercion rule:</strong> No “gotcha” endings. Every voice gets a fair steelman (best form) before critique.
+              </div>
+            </div>
+            <div class="hr"></div>
+            <p><b>Mechanic:</b> “Perspective tokens.” Readers must spend tokens to switch POV before voting on actions.</p>
+            <p class="mini">Research tie-in: narrative transportation varies by medium; test text vs audio vs video for your audience. <a href="https://spectrum.library.concordia.ca/id/eprint/994408/" target="_blank" rel="noopener">Atik, 2024 (thesis)</a></p>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>6) The Identity Garden (IG) — “stories as self-concept scaffolding” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> youth storytelling, recovery, resilience, or community identity building.</p>
+                <p><b>Structure:</b> Root (origin) → Stem (values) → Branch (choices) → Leaf (habits) → Fruit (impact) → Compost (learning from failure).</p>
+                <p><b>Mechanic:</b> “Micro-memoirs” that end with a future action the author consents to.</p>
+              </div>
+              <div class="callout">
+                <strong>Empowerment lens:</strong> Narrative/storytelling pedagogies can support students owning identity and community knowledge. <span class="mini"><a href="https://www.mdpi.com/2313-5778/8/3/94" target="_blank" rel="noopener">Macapugay, 2024</a></span>
+              </div>
+            </div>
+            <div class="callout badbox" style="margin-top:12px">
+              <strong>Safety clause:</strong> No forced disclosure. No “confessional pressure.” Provide opt-out routes and anonymize sensitive details.
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>7) The “Tiny Canon” Transmedia Kit (TCTK) — “build a universe that survives platform collapse” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <div class="grid2">
+              <div>
+                <p><b>Use when:</b> you want a storyworld that can be remixed across formats: text, audio, comics, interactive.</p>
+                <p><b>Structure:</b> Canon seeds (10 truths) → Symbols (5 recurring) → Conflicts (3) → Rituals (3) → Artifacts (3).</p>
+                <p><b>Mechanic:</b> Every format adds one artifact (map, letter, “field note,” patch note).</p>
+              </div>
+              <div class="callout">
+                <strong>Medium tuning:</strong> Transportation can change by medium; treat format as a dial. Prototype in text first (cheap), then expand.
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>8) The Stewardship Fable Lab (SFL) — “policy stories that end in tools” <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <p><b>Use when:</b> you want stories that lead to real action without propaganda.</p>
+            <div class="grid2">
+              <div class="callout">
+                <strong>Structure:</strong> Problem → Lived experience → Systems explanation → Option set → Consequence map → Tool download list (offline).
+              </div>
+              <div class="callout warnbox">
+                <strong>Integrity rule:</strong> Provide counterarguments and uncertainty ranges. Invite critique. Stories should be robust, not brittle.
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="prompts" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Prompt packs (expandable)</div>
+        <h2>Prompt primitives that generate frameworks (not just stories)</h2>
+
+        <details class="card" open>
+          <summary>🧱 “Framework Generator” prompt (copy + adapt) <span class="summaryHint"><span class="dot"></span> open</span></summary>
+          <div class="pad">
+            <p class="mini">These prompts are written to be safe-by-design: they ask for transparency, consent, and anti-coercion checks.</p>
+<pre><code>[ROLE]
+You are a framework designer, not a storyteller. Your job is to create a repeatable method.
+
+[GOAL]
+Design a storytelling framework for: {purpose}
+Audience: {audience}
+Medium: {text/audio/video/game/transmedia}
+Constraints: {time, literacy, sensitivity, cultural context}
+
+[OUTPUT FORMAT]
+1) Framework name + one-line promise
+2) 7-part skeleton (Purpose, Contract, World Rules, Perspective Engine, Mechanics, Feedback, Safety)
+3) 3 example “episodes” using the framework
+4) Safety checks:
+   - Is any group/individual targeted?
+   - Could this be used to coerce or manipulate?
+   - Are facts vs speculation clearly labeled?
+   - Are there opt-outs and repair paths?
+5) Evaluation plan (what to measure in a pilot)
+6) Adaptation notes (how to remix without harm)</code></pre>
+            <div class="btnRow">
+              <button class="btn" data-copy="#p1">Copy to clipboard</button>
+              <button class="btn" id="btnAwardPrompt">+ Award XP for Prompt Crafting</button>
+            </div>
+            <textarea id="p1" class="lab" style="position:absolute; left:-9999px; top:-9999px">You are a framework designer, not a storyteller. Your job is to create a repeatable method.
+
+Design a storytelling framework for: {purpose}
+Audience: {audience}
+Medium: {text/audio/video/game/transmedia}
+Constraints: {time, literacy, sensitivity, cultural context}
+
+Output:
+1) Framework name + one-line promise
+2) 7-part skeleton (Purpose, Contract, World Rules, Perspective Engine, Mechanics, Feedback, Safety)
+3) 3 example episodes
+4) Safety checks (targeting/coercion/fact-vs-speculation/opt-outs/repair paths)
+5) Evaluation plan
+6) Adaptation notes</textarea>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>🧭 “Truth-friendly myth” prompt <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+<pre><code>Create a mythic lens for a real-world system: {system}.
+Rules:
+- You must list: Known facts (3), Uncertainties (3), Hypotheses (3).
+- Myth elements are metaphors for incentives and feedback loops, not real people.
+- End each chapter with:
+  (A) Reality Anchor: one verifiable statement
+  (B) Speculation Gate: clearly labeled conjecture
+- Include a repair path if readers feel misled or harmed.</code></pre>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>🎛️ “Medium dial” prompt (text → audio → interactive) <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <p>
+              Narrative experience can shift by medium, so treat format like a control knob:
+              prototype cheap in text, then scale to richer media. (Medium effects are actively researched; test locally.)
+            </p>
+<pre><code>Take this story framework: {framework}.
+Produce three versions of the same episode:
+1) Text (600–900 words)
+2) Audio script (3 minutes)
+3) Interactive branching outline (5 choices)
+For each version, list:
+- What stays the same (core causality)
+- What changes (pace, emotion, clarity)
+- Risks (misinterpretation, manipulation)
+- Mitigations (transparency + opt-outs)</code></pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="lab" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Local-only builder</div>
+        <h2>Framework Builder Lab (saved to your device)</h2>
+        <p>
+          Fill this out to create your own framework entry. It saves into IndexedDB locally.
+          You can export/import as JSON for backups (still local—no auto-send). 🧰
+        </p>
+
+        <div class="lab">
+          <div class="twoCol">
+            <div>
+              <label for="fwName">Framework name</label>
+              <input id="fwName" maxlength="80" placeholder="e.g., The Mythic Systems Lens (MSL)" />
+            </div>
+            <div>
+              <label for="fwPurpose">Purpose</label>
+              <input id="fwPurpose" maxlength="100" placeholder="e.g., Teach climate systems without doom" />
+            </div>
+          </div>
+
+          <div class="twoCol">
+            <div>
+              <label for="fwAudience">Audience</label>
+              <input id="fwAudience" maxlength="100" placeholder="e.g., high school, community groups, policymakers" />
+            </div>
+            <div>
+              <label for="fwMedium">Primary medium</label>
+              <select id="fwMedium">
+                <option value="text">Text</option>
+                <option value="audio">Audio</option>
+                <option value="video">Video</option>
+                <option value="game">Game / interactive</option>
+                <option value="transmedia">Transmedia (multi-format)</option>
+              </select>
+            </div>
+          </div>
+
+          <label for="fwSkeleton">7-part skeleton (paste or write)</label>
+          <textarea id="fwSkeleton" placeholder="Purpose… Audience contract… World rules… Perspective engine… Mechanics… Feedback… Safety…"></textarea>
+
+          <div class="twoCol">
+            <div>
+              <label for="fwMechanic">Signature mechanic</label>
+              <input id="fwMechanic" maxlength="120" placeholder="e.g., Reality Anchor + Speculation Gate" />
+            </div>
+            <div>
+              <label for="fwSafety">Safety clause (required)</label>
+              <input id="fwSafety" maxlength="140" placeholder="e.g., No targeting individuals; opt-outs; label speculation." />
+            </div>
+          </div>
+
+          <label for="fwEpisodes">3 tiny example episodes (bullets are fine)</label>
+          <textarea id="fwEpisodes" placeholder="Episode 1… Episode 2… Episode 3…"></textarea>
+
+          <label for="fwNotes">Notes (optional)</label>
+          <textarea id="fwNotes" placeholder="What would you test? What could go wrong? How will you repair misunderstandings?"></textarea>
+
+          <div class="btnRow">
+            <button class="btn" id="btnSaveFramework">Save framework</button>
+            <button class="btn" id="btnClearForm">Clear</button>
+            <button class="btn" id="btnExport">Export JSON</button>
+            <button class="btn" id="btnImport">Import JSON</button>
+            <button class="btn" id="btnResetAll" title="Deletes local data (frameworks, notes, HUD).">Reset local data</button>
+          </div>
+
+          <div class="hr"></div>
+
+          <h3>Saved frameworks</h3>
+          <div class="mini">Tip: Use the top search box to filter by keywords. Deleting is local-only.</div>
+          <div class="list" id="frameworkList" aria-live="polite"></div>
+
+          <div class="hr"></div>
+
+          <h3>Quick notes</h3>
+          <div class="twoCol">
+            <div>
+              <label for="noteText">New note</label>
+              <textarea id="noteText" placeholder="Capture an insight, a metaphor, a caution, a scene idea…"></textarea>
+              <div class="btnRow">
+                <button class="btn" id="btnSaveNote">Save note</button>
+                <button class="btn" id="btnAwardNote">+ XP for note</button>
+              </div>
+            </div>
+            <div>
+              <label>Saved notes</label>
+              <div class="list" id="noteList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ethics" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Misuse resistance</div>
+        <h2>Zero-harm design checks (anti-coercion by default)</h2>
+        <div class="grid2">
+          <div class="callout badbox">
+            <strong>Red flags 🚫</strong>
+            <ul style="margin:8px 0 0; padding-left: 18px">
+              <li>Targeting real individuals or groups as villains.</li>
+              <li>Hiding intent (“this is just entertainment”) while steering behavior.</li>
+              <li>Using fear, shame, or isolation as primary drivers.</li>
+              <li>“No opt-out” experiences or forced disclosure.</li>
+              <li>Calls to violence, harassment, or dehumanization.</li>
+            </ul>
+          </div>
+          <div class="callout">
+            <strong>Green flags ✅</strong>
+            <ul style="margin:8px 0 0; padding-left: 18px">
+              <li>Transparent goals + labeled speculation.</li>
+              <li>Consent-forward mechanics (choices and exits).</li>
+              <li>Repair paths (how to correct misunderstandings).</li>
+              <li>Steelman before critique; multi-voice fairness.</li>
+              <li>Action outcomes that increase wellbeing and agency.</li>
+            </ul>
+          </div>
+        </div>
+
+        <details class="card">
+          <summary>🧯 The “Inversion Test” (quick) <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <p>
+              Imagine a hostile actor steals your framework and flips the values. What damage could it do?
+              Patch the weakest point first.
+            </p>
+            <ol style="margin:0; padding-left: 18px; color: rgba(255,255,255,.88); line-height:1.55">
+              <li>List the top 3 ways it could be misused.</li>
+              <li>For each, add a guardrail: disclosure, opt-outs, no-targeting rules, moderation guidance.</li>
+              <li>Re-run the test after changes.</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary>🤖 AI co-creation ethics checklist <span class="summaryHint"><span class="dot"></span> expand</span></summary>
+          <div class="pad">
+            <ul style="margin:0; padding-left: 18px">
+              <li>State what the AI did vs what the human did (attribution for honesty).</li>
+              <li>Avoid generating realistic personal accusations or doxxable content.</li>
+              <li>Prefer AI for: brainstorming, counterarguments, structure, and accessibility rewrites.</li>
+              <li>Human owns: testimony, final voice, value judgments, and sensitive context.</li>
+            </ul>
+            <p class="mini">
+              Evidence tie-in: writers integrating AI often make deliberate value-based decisions; treat values as first-class settings. <a href="https://arxiv.org/html/2411.03137v2" target="_blank" rel="noopener">arXiv, 2025</a>
+            </p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="attributions" class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="kicker">Licensing & acknowledgements</div>
+        <h2>Attributions & Licensing</h2>
+        <p>
+          This single-file tool is original work for offline-first storytelling framework building. It references
+          publicly available research pages for context (links above). No external libraries are used.
+        </p>
+        <div class="grid2">
+          <div class="callout">
+            <strong>Recommended license for this file:</strong><br/>
+            <span class="mini">
+              For public remix culture: <b>CC BY-SA 4.0</b> (share-alike keeps derivatives open).<br/>
+              For code-focused ecosystems: <b>AGPL-3.0</b> (network copyleft).<br/>
+            </span>
+            <div class="mini">Choose based on whether you want “content-like” remixing (CC) or “software-like” reuse (AGPL).</div>
+          </div>
+          <div class="callout">
+            <strong>Pattern inspirations (license-respecting):</strong><br/>
+            <ul style="margin:8px 0 0; padding-left: 18px">
+              <li>Offline-first/PWA patterns (common web platform approach; no copied proprietary code).</li>
+              <li>Gamification HUD style inspired by simple RPG UI conventions (generic pattern).</li>
+              <li>Collapsible long-form docs via native <code>&lt;details&gt;</code> (web standard).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="card" style="margin-top:16px">
+      <div class="pad">
+        <div class="footGrid">
+          <div>
+            <b>Zero-Harm & Anti-Inversion Note</b><br/>
+            This Atlas stores everything locally on your device. No auto-send features. No hidden telemetry.
+            It’s designed to help people create narratives that increase agency, clarity, and benevolent outcomes—never coercion.
+          </div>
+          <div>
+            <b>Local reset</b><br/>
+            You can wipe all saved data with “Reset local data” in the Lab.
+            Export/import is JSON and stays in your control.
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <div id="hud" aria-live="polite">
+    <div class="row">
+      <div class="stat" title="Your local-only progress"><i>XP</i> <span id="xpVal">0</span></div>
+      <div class="stat" title="Level increases every ~100 XP (simple curve)"><i>LV</i> <span id="lvlVal">1</span></div>
+      <div class="stat" title="Days in a row you saved something"><i>🔥</i> <span id="streakVal">0</span></div>
+      <div class="hudBar" title="Progress to next level"><span id="hudFill"></span></div>
+      <div class="hudBtns">
+        <button class="tinyBtn" id="btnQuest">Daily Quest</button>
+        <button class="tinyBtn" id="btnHUDReset">Reset HUD</button>
+      </div>
+    </div>
+    <div class="row">
+      <div class="mini" id="questText">Quest: Save 1 framework or 2 notes today.</div>
+    </div>
+  </div>
+
+  <noscript>
+    <div style="max-width:1180px;margin:16px auto;padding:16px;border:1px solid #ccc;border-radius:12px;background:#fff;color:#000">
+      <b>JavaScript is disabled.</b> This page needs JS for offline storage, search, and the framework builder.
+      You can still read the content, but saving/exporting won’t work.
+    </div>
+  </noscript>
+
+  <script>
+    /* =========================================================================
+       TOOLTIP: SAFETY UTILITIES (SANITIZATION + RATE LIMITING)
+       What this is: Defensive helpers to prevent injection and keep UI responsive.
+       How to extend: Add stricter rules per field (allowlists), and per-action quotas.
+       Expected outcome: No HTML injection via user input; gentle anti-spam constraints.
+    ========================================================================= */
+    const Safe = (() => {
+      const esc = (s) => String(s ?? "")
+        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;").replaceAll("'","&#39;");
+      const clamp = (s, n=2000) => String(s ?? "").slice(0, n);
+      const now = () => Date.now();
+      const rl = new Map(); // key -> [timestamps]
+      function rateLimit(key, limit=8, windowMs=5000){
+        const t = now();
+        const arr = rl.get(key) || [];
+        const fresh = arr.filter(x => (t - x) < windowMs);
+        fresh.push(t);
+        rl.set(key, fresh);
+        return fresh.length <= limit;
+      }
+      return { esc, clamp, rateLimit };
+    })();
+
+    /* =========================================================================
+       TOOLTIP: INDEXEDDB WRAPPER
+       What this is: Minimal IndexedDB helper for offline persistence.
+       How to extend: Add stores, indexes, migrations (bump DB_VERSION).
+       Expected outcome: Reliable local storage without external dependencies.
+    ========================================================================= */
+    const DB_NAME = "storyforge_atlas_db";
+    const DB_VERSION = 1;
+
+    const db = (() => {
+      let _db = null;
+
+      function open(){
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = () => {
+            const d = req.result;
+            const ensure = (name, opts) => d.objectStoreNames.contains(name) ? d.transaction.objectStore(name) : d.createObjectStore(name, opts);
+            ensure("settings", { keyPath: "key" });
+            ensure("frameworks", { keyPath: "id" });
+            ensure("notes", { keyPath: "id" });
+            ensure("hud", { keyPath: "key" });
+          };
+          req.onsuccess = () => { _db = req.result; resolve(_db); };
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function tx(store, mode="readonly"){
+        const t = _db.transaction(store, mode);
+        return t.objectStore(store);
+      }
+
+      function get(store, key){
+        return new Promise((resolve, reject) => {
+          const req = tx(store).get(key);
+          req.onsuccess = () => resolve(req.result || null);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function getAll(store){
+        return new Promise((resolve, reject) => {
+          const req = tx(store).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function put(store, value){
+        return new Promise((resolve, reject) => {
+          const req = tx(store, "readwrite").put(value);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      function del(store, key){
+        return new Promise((resolve, reject) => {
+          const req = tx(store, "readwrite").delete(key);
+          req.onsuccess = () => resolve(true);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function clearAll(){
+        const stores = ["settings","frameworks","notes","hud"];
+        for (const s of stores){
+          await new Promise((resolve,reject)=>{
+            const req = tx(s, "readwrite").clear();
+            req.onsuccess=()=>resolve(true);
+            req.onerror=()=>reject(req.error);
+          });
+        }
+      }
+
+      return { open, get, getAll, put, del, clearAll };
+    })();
+
+    /* =========================================================================
+       TOOLTIP: SERVICE WORKER (INLINE VIA BLOB)
+       What this is: Offline caching for this single file.
+       How to extend: Add other assets (if you later split files).
+       Expected outcome: Page loads even without network once cached.
+    ========================================================================= */
+    async function registerSW(){
+      if (!("serviceWorker" in navigator)) return false;
+      try{
+        const swCode = `
+          const CACHE = "storyforge-atlas-v1";
+          self.addEventListener("install", (e) => {
+            e.waitUntil((async()=>{
+              const c = await caches.open(CACHE);
+              await c.addAll(["./"]);
+              self.skipWaiting();
+            })());
+          });
+          self.addEventListener("activate", (e) => {
+            e.waitUntil((async()=>{
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => k===CACHE ? null : caches.delete(k)));
+              self.clients.claim();
+            })());
+          });
+          self.addEventListener("fetch", (e) => {
+            const req = e.request;
+            e.respondWith((async()=>{
+              const cached = await caches.match(req, { ignoreSearch: true });
+              if (cached) return cached;
+              try{
+                const net = await fetch(req);
+                const c = await caches.open(CACHE);
+                c.put(req, net.clone());
+                return net;
+              }catch(err){
+                return cached || new Response("Offline. Open the page once while online to cache it.", {status:200});
+              }
+            })());
+          });
+        `;
+        const blob = new Blob([swCode], {type:"text/javascript"});
+        const url = URL.createObjectURL(blob);
+        await navigator.serviceWorker.register(url, {scope:"./"});
+        return true;
+      }catch(e){
+        return false;
+      }
+    }
+
+    /* =========================================================================
+       TOOLTIP: UI HELPERS (TOC, COLLAPSE/EXPAND, SEARCH)
+       What this is: Long-doc navigation and filtering.
+       How to extend: Add section anchors to tocItems; search indexes can be refined.
+       Expected outcome: Fast discovery and less scroll fatigue.
+    ========================================================================= */
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    const tocItems = [
+      ["top","Top"],
+      ["principles","Principles"],
+      ["frameworks","Framework Examples"],
+      ["prompts","Prompt Packs"],
+      ["lab","Builder Lab"],
+      ["ethics","Zero-Harm Checks"],
+      ["attributions","Attributions"]
+    ];
+
+    function buildTOC(){
+      const toc = $("#toc");
+      toc.innerHTML = "";
+      for (const [id,label] of tocItems){
+        const a = document.createElement("a");
+        a.href = "#" + id;
+        a.textContent = label;
+        toc.appendChild(a);
+      }
+    }
+
+    function setAllDetails(open){
+      $$("details.card").forEach(d => { d.open = !!open; });
+    }
+
+    function applySearch(q){
+      q = (q || "").trim().toLowerCase();
+      const blocks = $$("section, details.card, .item");
+      if (!q){
+        blocks.forEach(b => b.style.display = "");
+        return;
+      }
+      blocks.forEach(b=>{
+        const t = (b.innerText || "").toLowerCase();
+        b.style.display = t.includes(q) ? "" : "none";
+      });
+    }
+
+    /* =========================================================================
+       TOOLTIP: HUD (XP / LEVEL / STREAK)
+       What this is: Local-only progress tracking + tiny daily quest.
+       How to extend: Add achievements tied to specific actions (e.g., 5 frameworks).
+       Expected outcome: Light motivation without surveillance or coercion.
+    ========================================================================= */
+    const HUD = (() => {
+      const state = {
+        xp: 0,
+        streak: 0,
+        lastActionDay: null, // YYYY-MM-DD
+        quest: "Quest: Save 1 framework or 2 notes today."
+      };
+
+      const dayKey = (d = new Date()) => {
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const dd = String(d.getDate()).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
+      const levelFromXP = (xp) => {
+        // simple gentle curve: each level costs 100 + 20*(level-1)
+        let lvl = 1, cost = 100, remaining = xp;
+        while (remaining >= cost){
+          remaining -= cost;
+          lvl++;
+          cost = 100 + 20*(lvl-1);
+        }
+        return { lvl, into: remaining, next: cost };
+      };
+
+      async function load(){
+        const xpRow = await db.get("hud","xp");
+        const stRow = await db.get("hud","streak");
+        const laRow = await db.get("hud","lastActionDay");
+        const qRow  = await db.get("hud","quest");
+        if (xpRow) state.xp = xpRow.value|0;
+        if (stRow) state.streak = stRow.value|0;
+        if (laRow) state.lastActionDay = laRow.value || null;
+        if (qRow) state.quest = qRow.value || state.quest;
+        render();
+      }
+
+      async function save(){
+        await db.put("hud", {key:"xp", value: state.xp});
+        await db.put("hud", {key:"streak", value: state.streak});
+        await db.put("hud", {key:"lastActionDay", value: state.lastActionDay});
+        await db.put("hud", {key:"quest", value: state.quest});
+      }
+
+      async function award(xpDelta, reason=""){
+        if (!Safe.rateLimit("award", 10, 8000)) return;
+        const today = dayKey();
+        if (state.lastActionDay !== today){
+          // streak logic: if yesterday then +1 else reset to 1
+          const y = new Date(); y.setDate(y.getDate()-1);
+          const yd = dayKey(y);
+          state.streak = (state.lastActionDay === yd) ? (state.streak + 1) : 1;
+          state.lastActionDay = today;
+        }
+        state.xp += Math.max(0, xpDelta|0);
+        await save();
+        render();
+      }
+
+      function render(){
+        const {lvl, into, next} = levelFromXP(state.xp);
+        $("#xpVal").textContent = String(state.xp);
+        $("#lvlVal").textContent = String(lvl);
+        $("#streakVal").textContent = String(state.streak);
+        $("#questText").textContent = state.quest;
+        const pct = Math.max(0, Math.min(100, (into / next) * 100));
+        $("#hudFill").style.width = pct.toFixed(1) + "%";
+      }
+
+      async function reset(){
+        state.xp = 0; state.streak = 0; state.lastActionDay = null;
+        state.quest = "Quest: Save 1 framework or 2 notes today.";
+        await save(); render();
+      }
+
+      function newQuest(){
+        const quests = [
+          "Quest: Save 1 framework or 2 notes today.",
+          "Quest: Add a safety clause to a framework you admire.",
+          "Quest: Rewrite a scene from a new POV (steelman first).",
+          "Quest: Add 3 Reality Anchors + 3 Speculation Gates to a draft.",
+          "Quest: Prototype the same episode in text + interactive outline."
+        ];
+        state.quest = quests[Math.floor(Math.random()*quests.length)];
+        save().catch(()=>{});
+        render();
+      }
+
+      return { load, award, reset, newQuest, state };
+    })();
+
+    /* =========================================================================
+       TOOLTIP: CONSTELLATION VISUALIZER
+       What this is: A small canvas that visualizes your local state as nodes/links.
+       How to extend: Map nodes to categories (framework count, notes, XP, streak).
+       Expected outcome: A gentle “living map” with zero data exfiltration.
+    ========================================================================= */
+    function drawConstellation(stats){
+      const c = $("#constellation");
+      if (!c) return;
+      const ctx = c.getContext("2d");
+      const w = c.width, h = c.height;
+      ctx.clearRect(0,0,w,h);
+
+      // background faint grid
+      ctx.globalAlpha = 0.18;
+      for (let i=0;i<10;i++){
+        const x = (w/10)*i;
+        const y = (h/10)*i;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.strokeStyle = "#ffffff"; ctx.lineWidth=1; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // nodes: frameworks, notes, xp, streak
+      const nodes = [
+        {k:"Frameworks", v: stats.frameworks, x: 46, y: 56},
+        {k:"Notes", v: stats.notes, x: 134, y: 52},
+        {k:"XP", v: stats.xp, x: 58, y: 134},
+        {k:"Streak", v: stats.streak, x: 136, y: 138}
+      ];
+
+      // links
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 1;
+      for (let i=0;i<nodes.length;i++){
+        for (let j=i+1;j<nodes.length;j++){
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      // nodes
+      for (const n of nodes){
+        const r = 6 + Math.min(14, Math.sqrt(Math.max(0,n.v))*2);
+        ctx.beginPath();
+        ctx.arc(n.x,n.y,r,0,Math.PI*2);
+        ctx.fillStyle = "rgba(141,181,255,.55)";
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(255,255,255,.55)";
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255,255,255,.86)";
+        ctx.font = "11px " + getComputedStyle(document.documentElement).getPropertyValue("--mono");
+        ctx.fillText(`${n.k}:${n.v}`, n.x - 28, n.y + r + 14);
+      }
+    }
+
+    /* =========================================================================
+       TOOLTIP: APP STATE + RENDERING (FRAMEWORKS/NOTES)
+       What this is: CRUD for entries stored in IndexedDB, displayed as cards.
+       How to extend: Add tags, sorting, sharing (manual export), or version history.
+       Expected outcome: A reusable local knowledge base.
+    ========================================================================= */
+    function uid(){
+      return "id_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+    }
+
+    function readFrameworkForm(){
+      const name = Safe.clamp($("#fwName").value, 80).trim();
+      const purpose = Safe.clamp($("#fwPurpose").value, 100).trim();
+      const audience = Safe.clamp($("#fwAudience").value, 100).trim();
+      const medium = $("#fwMedium").value;
+      const skeleton = Safe.clamp($("#fwSkeleton").value, 6000).trim();
+      const mechanic = Safe.clamp($("#fwMechanic").value, 120).trim();
+      const safety = Safe.clamp($("#fwSafety").value, 140).trim();
+      const episodes = Safe.clamp($("#fwEpisodes").value, 6000).trim();
+      const notes = Safe.clamp($("#fwNotes").value, 6000).trim();
+      return { name, purpose, audience, medium, skeleton, mechanic, safety, episodes, notes };
+    }
+
+    function clearFrameworkForm(){
+      ["fwName","fwPurpose","fwAudience","fwSkeleton","fwMechanic","fwSafety","fwEpisodes","fwNotes"].forEach(id => $("#"+id).value="");
+      $("#fwMedium").value = "text";
+    }
+
+    async function saveFramework(){
+      if (!Safe.rateLimit("saveFramework", 6, 8000)) return;
+      const f = readFrameworkForm();
+      if (!f.name || !f.purpose || !f.safety){
+        alert("Please provide at least: Framework name, Purpose, and Safety clause.");
+        return;
+      }
+      const row = {
+        id: uid(),
+        type: "framework",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        ...f
+      };
+      await db.put("frameworks", row);
+      await HUD.award(35, "framework");
+      clearFrameworkForm();
+      await refreshLists();
+    }
+
+    async function saveNote(){
+      if (!Safe.rateLimit("saveNote", 10, 8000)) return;
+      const text = Safe.clamp($("#noteText").value, 4000).trim();
+      if (!text){
+        alert("Write a note first 🙂");
+        return;
+      }
+      const row = { id: uid(), type:"note", text, createdAt: Date.now() };
+      await db.put("notes", row);
+      $("#noteText").value = "";
+      await HUD.award(10, "note");
+      await refreshLists();
+    }
+
+    function fmtTime(ts){
+      try{
+        const d = new Date(ts);
+        return d.toLocaleString(undefined, {year:"numeric",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+      }catch{ return "—"; }
+    }
+
+    function renderFrameworkItem(f){
+      const div = document.createElement("div");
+      div.className = "item";
+      div.setAttribute("data-search", (f.name+" "+f.purpose+" "+f.audience+" "+f.skeleton+" "+f.episodes+" "+f.notes).toLowerCase());
+      div.innerHTML = `
+        <div class="itemTitle">
+          <div>
+            <b>${Safe.esc(f.name)}</b>
+            <div class="mini">${Safe.esc(f.purpose)} • <span class="itemMeta">${Safe.esc(f.medium)} • ${fmtTime(f.createdAt)}</span></div>
+          </div>
+          <div class="itemMeta">${Safe.esc(f.audience || "—")}</div>
+        </div>
+        <div class="callout"><strong>Safety:</strong> ${Safe.esc(f.safety)}</div>
+        <details style="margin-top:10px">
+          <summary style="cursor:pointer; font-weight:700">Open details</summary>
+          <div style="margin-top:10px" class="grid2">
+            <div>
+              <div class="mini"><b>Skeleton</b></div>
+              <pre><code>${Safe.esc(f.skeleton || "(none)")}</code></pre>
+            </div>
+            <div>
+              <div class="mini"><b>Mechanic</b></div>
+              <pre><code>${Safe.esc(f.mechanic || "(none)")}</code></pre>
+              <div class="mini"><b>Episodes</b></div>
+              <pre><code>${Safe.esc(f.episodes || "(none)")}</code></pre>
+              <div class="mini"><b>Notes</b></div>
+              <pre><code>${Safe.esc(f.notes || "(none)")}</code></pre>
+            </div>
+          </div>
+        </details>
+        <div class="itemActions">
+          <button class="btn" data-action="delete" data-id="${Safe.esc(f.id)}">Delete</button>
+        </div>
+      `;
+      return div;
+    }
+
+    function renderNoteItem(n){
+      const div = document.createElement("div");
+      div.className = "item";
+      div.setAttribute("data-search", n.text.toLowerCase());
+      div.innerHTML = `
+        <div class="itemTitle">
+          <div>
+            <b>Note</b>
+            <div class="itemMeta">${fmtTime(n.createdAt)}</div>
+          </div>
+          <div></div>
+        </div>
+        <div>${Safe.esc(n.text)}</div>
+        <div class="itemActions">
+          <button class="btn" data-action="deleteNote" data-id="${Safe.esc(n.id)}">Delete</button>
+        </div>
+      `;
+      return div;
+    }
+
+    async function refreshLists(){
+      const [frameworks, notes] = await Promise.all([db.getAll("frameworks"), db.getAll("notes")]);
+      frameworks.sort((a,b)=>b.createdAt-a.createdAt);
+      notes.sort((a,b)=>b.createdAt-a.createdAt);
+
+      const fwList = $("#frameworkList");
+      const noteList = $("#noteList");
+      fwList.innerHTML = "";
+      noteList.innerHTML = "";
+
+      frameworks.forEach(f => fwList.appendChild(renderFrameworkItem(f)));
+      notes.forEach(n => noteList.appendChild(renderNoteItem(n)));
+
+      // stats
+      $("#statFrameworks").textContent = String(frameworks.length);
+      $("#statNotes").textContent = String(notes.length);
+      const last = Math.max(
+        frameworks[0]?.createdAt || 0,
+        notes[0]?.createdAt || 0
+      );
+      $("#statLast").textContent = last ? fmtTime(last) : "—";
+
+      // update constellation
+      drawConstellation({
+        frameworks: frameworks.length,
+        notes: notes.length,
+        xp: HUD.state?.xp ?? 0,
+        streak: HUD.state?.streak ?? 0
+      });
+
+      // re-apply search filter if any
+      const q = $("#searchBox").value.trim().toLowerCase();
+      if (q){
+        // filter only list items and main blocks are handled by applySearch; we additionally filter items by data-search
+        $$(".item").forEach(el=>{
+          const t = (el.getAttribute("data-search") || "");
+          el.style.display = t.includes(q) ? "" : "none";
+        });
+      }
+    }
+
+    async function handleDelete(id){
+      await db.del("frameworks", id);
+      await HUD.award(2, "cleanup");
+      await refreshLists();
+    }
+    async function handleDeleteNote(id){
+      await db.del("notes", id);
+      await HUD.award(1, "cleanup");
+      await refreshLists();
+    }
+
+    /* =========================================================================
+       TOOLTIP: EXPORT / IMPORT (LOCAL FILES ONLY)
+       What this is: Manual backup and restore via JSON files.
+       How to extend: Add schema versions, selective export (only frameworks).
+       Expected outcome: Portability without accounts or servers.
+    ========================================================================= */
+    async function exportJSON(){
+      if (!Safe.rateLimit("export", 3, 10000)) return;
+      const payload = {
+        version: 1,
+        exportedAt: Date.now(),
+        frameworks: await db.getAll("frameworks"),
+        notes: await db.getAll("notes"),
+        hud: await db.getAll("hud")
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "storyforge_atlas_export.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      await HUD.award(5, "export");
+    }
+
+    async function importJSON(){
+      if (!Safe.rateLimit("import", 3, 10000)) return;
+      const inp = document.createElement("input");
+      inp.type = "file";
+      inp.accept = "application/json";
+      inp.onchange = async () => {
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        try{
+          const text = await file.text();
+          const obj = JSON.parse(text);
+          if (!obj || typeof obj !== "object") throw new Error("Invalid JSON");
+          if (obj.frameworks && Array.isArray(obj.frameworks)){
+            for (const f of obj.frameworks) await db.put("frameworks", f);
+          }
+          if (obj.notes && Array.isArray(obj.notes)){
+            for (const n of obj.notes) await db.put("notes", n);
+          }
+          if (obj.hud && Array.isArray(obj.hud)){
+            for (const h of obj.hud) await db.put("hud", h);
+          }
+          await HUD.load();
+          await refreshLists();
+          await HUD.award(8, "import");
+        }catch(e){
+          alert("Import failed: " + (e?.message || "Unknown error"));
+        }
+      };
+      inp.click();
+    }
+
+    async function resetAll(){
+      if (!confirm("This will delete ALL local data for StoryForge Atlas (frameworks, notes, HUD). Continue?")) return;
+      await db.clearAll();
+      await HUD.reset();
+      await refreshLists();
+      drawConstellation({frameworks:0, notes:0, xp:0, streak:0});
+    }
+
+    /* =========================================================================
+       TOOLTIP: PARALLAX SCROLL HANDLER
+       What this is: Subtle background motion based on scroll position.
+       How to extend: Add more layers, clamp movement, or tie to user settings.
+       Expected outcome: Gentle depth without heavy performance cost.
+    ========================================================================= */
+    function setupParallax(){
+      const neb = $("#nebula");
+      const stars = $("#stars");
+      let ticking = false;
+
+      function onScroll(){
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(()=>{
+          const y = window.scrollY || 0;
+          neb.style.transform = `translate3d(0, ${y * 0.05}px, 0)`;
+          stars.style.transform = `translate3d(0, ${y * 0.10}px, 0)`;
+          ticking = false;
+        });
+      }
+      window.addEventListener("scroll", onScroll, {passive:true});
+      onScroll();
+    }
+
+    /* =========================================================================
+       TOOLTIP: SPLASH BOOT SEQUENCE
+       What this is: A tiny pseudo-boot log for delight + transparency.
+       How to extend: Add more steps, show storage quota, show offline status.
+       Expected outcome: Better UX + no “mystery loading.”
+    ========================================================================= */
+    async function boot(){
+      const bar = $("#splashBar");
+      const lines = $("#bootLines");
+      const log = (t) => { lines.textContent += "\n" + t; };
+
+      lines.textContent = "boot: initializing…";
+      bar.style.width = "12%";
+      await new Promise(r=>setTimeout(r, 120));
+
+      log("boot: opening IndexedDB…");
+      bar.style.width = "28%";
+      await db.open();
+
+      log("boot: loading HUD…");
+      bar.style.width = "42%";
+      await HUD.load();
+
+      log("boot: caching for offline use…");
+      bar.style.width = "62%";
+      const sw = await registerSW();
+      $("#statMode").textContent = sw ? "Offline-capable (cached)" : "Offline-limited (no SW)";
+      bar.style.width = "74%";
+
+      log("boot: building navigation…");
+      buildTOC();
+      bar.style.width = "86%";
+
+      log("boot: rendering saved items…");
+      await refreshLists();
+      bar.style.width = "100%";
+
+      await new Promise(r=>setTimeout(r, 150));
+      $("#splash").classList.add("hidden");
+      setTimeout(()=>$("#splash").remove(), 700);
+    }
+
+    /* =========================================================================
+       TOOLTIP: EVENT WIRING
+       What this is: Binds UI actions to functions with safe checks.
+       How to extend: Add buttons, keyboard shortcuts, and better toasts.
+       Expected outcome: Interactive lab with no console errors.
+    ========================================================================= */
+    function wire(){
+      $("#btnExpand").addEventListener("click", ()=>setAllDetails(true));
+      $("#btnCollapse").addEventListener("click", ()=>setAllDetails(false));
+
+      $("#searchBox").addEventListener("input", (e)=>{
+        const q = e.target.value;
+        applySearch(q);
+        // extra filter list items
+        $$(".item").forEach(el=>{
+          const t = (el.getAttribute("data-search") || "");
+          el.style.display = !q ? "" : (t.includes(q.toLowerCase()) ? "" : "none");
+        });
+      });
+
+      $("#btnSaveFramework").addEventListener("click", ()=>saveFramework().catch(()=>{}));
+      $("#btnClearForm").addEventListener("click", ()=>clearFrameworkForm());
+      $("#btnSaveNote").addEventListener("click", ()=>saveNote().catch(()=>{}));
+      $("#btnExport").addEventListener("click", ()=>exportJSON().catch(()=>{}));
+      $("#btnImport").addEventListener("click", ()=>importJSON().catch(()=>{}));
+      $("#btnResetAll").addEventListener("click", ()=>resetAll().catch(()=>{}));
+
+      $("#btnQuest").addEventListener("click", ()=>HUD.newQuest());
+      $("#btnHUDReset").addEventListener("click", ()=>HUD.reset().catch(()=>{}));
+
+      $("#btnAwardQuickstart").addEventListener("click", ()=>HUD.award(12,"quickstart"));
+      $("#btnAwardPrompt").addEventListener("click", ()=>HUD.award(8,"prompt"));
+      $("#btnAwardNote").addEventListener("click", ()=>HUD.award(6,"note"));
+
+      // delegated deletes
+      document.addEventListener("click", (e)=>{
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const act = btn.getAttribute("data-action");
+        const id = btn.getAttribute("data-id");
+        if (!id) return;
+        if (act === "delete"){
+          if (confirm("Delete this framework (local-only)?")) handleDelete(id).catch(()=>{});
+        }
+        if (act === "deleteNote"){
+          if (confirm("Delete this note (local-only)?")) handleDeleteNote(id).catch(()=>{});
+        }
+      });
+
+      // copy buttons
+      document.addEventListener("click", async (e)=>{
+        const b = e.target.closest("button[data-copy]");
+        if (!b) return;
+        const sel = b.getAttribute("data-copy");
+        const ta = $(sel);
+        if (!ta) return;
+        try{
+          await navigator.clipboard.writeText(ta.value);
+          await HUD.award(2,"copy");
+          b.textContent = "Copied ✓";
+          setTimeout(()=>b.textContent="Copy to clipboard", 900);
+        }catch{
+          alert("Clipboard blocked by browser. You can manually select and copy.");
+        }
+      });
+    }
+
+    // init
+    (function init(){
+      setupParallax();
+      wire();
+      boot().catch((e)=>{
+        // fail safely without console noise
+        alert("Initialization failed. Try refreshing. (Local-only app)");
+      });
+    })();
+  </script>
+</body>
+</html>
